@@ -1,54 +1,44 @@
-class DataCenter:
-    def __init__(self, m):
-        self.__servers = [1 for i in range(m)]
-        self.__reboot_count = 0
-
-    def disable_server(self, i):
-        self.__servers[i - 1] = 0
-
-    def reboot_all_servers(self):
-        self.__servers = [1 for i in range(m)]
-        self.__reboot_count += 1
-
-    def get_reboot_count(self):
-        return self.__reboot_count
-
-    def get_working_servers_count(self):
-        return sum(self.__servers)
-
-
-##### PRODUCTION AREA
-# n, m, q = list(map(int, input().split(' ')))
-
-# rows = []
-# for row in range(q):
-#     row_info = input()
-#     rows.append(row_info)
-#####
-
-
-##### TEST AREA
-with open('test2.txt', 'r') as f:
-    rows = f.read().splitlines()
-
-n, m, q = list(map(int, rows[0].split()))
-rows = rows[1:]
-#####
-
-dc_arr = [''] + [DataCenter(m) for i in range(n)]
-
-for row in rows:
-    if row.startswith('DISABLE'):
-        _, dc_num, server_num = row.split(' ')
-        dc_arr[int(dc_num)].disable_server(int(server_num))
-    elif row.startswith('RESET'):
-        _, dc_num = row.split(' ')
-        dc_arr[int(dc_num)].reboot_all_servers()
-    elif row.startswith('GETMAX'):
-        R_DOT_A_values = [i.get_reboot_count() * i.get_working_servers_count() for i in dc_arr[1:]]
-        max_R_DOT_A_value = max(R_DOT_A_values)
-        print(R_DOT_A_values.index(max_R_DOT_A_value) + 1)
-    elif row.startswith('GETMIN'):
-        R_DOT_A_values = [i.get_reboot_count() * i.get_working_servers_count() for i in dc_arr[1:]]
-        min_R_DOT_A_value = min(R_DOT_A_values)
-        print(R_DOT_A_values.index(min_R_DOT_A_value) + 1)
+import sys
+import heapq
+ 
+# input = open('input.txt').readline
+input = sys.stdin.readline
+n, m, q = map(int, input().split())
+db = [0] * n  # битовая маска включенных машин
+da = [m] * n  # число включённыых машин
+dr = [0] * n  # число перезапусков
+dw = [0] * n  # метрика r*a
+ 
+min_heap = [(0, i) for i in range(n)]
+max_heap = [(0, i) for i in range(n)]
+ 
+for _ in range(q):
+    cmd, *a, = input().split()
+    *a, = map(int, a)
+    if cmd == 'RESET':
+        i = a[0] - 1
+        db[i] = 0
+        da[i] = m
+        dr[i] += 1
+        dw[i] = dr[i] * da[i]
+        heapq.heappush(min_heap, (dw[i], i))
+        heapq.heappush(max_heap, (-dw[i], i))
+    elif cmd == 'DISABLE':
+        i, j = a
+        i -= 1
+        j -= 1
+        t = 1 << j
+        if db[i] & t: continue
+        db[i] |= t
+        da[i] -= 1
+        dw[i] -= dr[i]
+        heapq.heappush(min_heap, (dw[i], i))
+        heapq.heappush(max_heap, (-dw[i], i))
+    elif cmd == 'GETMAX':
+        while -max_heap[0][0] != dw[max_heap[0][1]]:
+            heapq.heappop(max_heap)
+        print(max_heap[0][1] + 1)
+    elif cmd == 'GETMIN':
+        while min_heap[0][0] != dw[min_heap[0][1]]:
+            heapq.heappop(min_heap)
+        print(min_heap[0][1] + 1)
