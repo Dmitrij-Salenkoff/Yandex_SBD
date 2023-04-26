@@ -1,4 +1,5 @@
 import json
+import io
 
 
 class Offer:
@@ -85,7 +86,7 @@ for _ in range(m):
 #     row = rows[i].split(' ')
 #     a, b = int(row[0]), int(row[1])
 #     subscribers.append(Subscriber(row[2:2 + a], row[2 + a:]))
-#
+# 
 # for i in range(m):
 #     js = json.loads(rows[n + i + 1])
 #     updates.append(Update(js['trace_id'], Offer(**js['offer'])))
